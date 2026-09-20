@@ -89,20 +89,44 @@ Sonra tarayıcıda `http://localhost:8000` adresini açın.
 
 ### Telefona kurma
 
-Uygulama yayında, telefonda şu adresten açılabilir:
+**iPhone (Safari) ve hızlı deneme için:**
 
-**https://talsa422.github.io/sayac-okuma/**
-
-1. Bu adresi Chrome (Android) veya Safari (iPhone) ile açın.
+1. https://talsa422.github.io/sayac-okuma/ adresini açın.
 2. Chrome'da sağ üst **⋮ menü → Ana ekrana ekle**; Safari'de **Paylaş →
    Ana Ekrana Ekle**.
 3. Artık uygulama ikonu ana ekranınızda, normal bir uygulama gibi açılır,
    tam ekran çalışır ve internetsiz de kullanılabilir.
 
+**Android'de gerçek bir uygulama (.apk) olarak kurmak için:**
+
+1. https://github.com/talsa422/sayac-okuma/releases/tag/android-v1.0
+   adresinden **sayac-okuma.apk** dosyasını telefonunuza indirin.
+2. İndirilenler'den dosyaya dokunun; Android "bilinmeyen kaynaklardan
+   yükleme" izni isteyebilir, bu Play Store dışından kurulan her
+   uygulama için görülen normal bir uyarıdır, onaylayın.
+3. Kurulum bitince uygulama diğer uygulamalarla birlikte ana ekranınızda,
+   kendi ikonuyla görünür.
+
+Bu Android uygulaması gerçek bir "Trusted Web Activity" sarmalayıcısıdır:
+içeride yukarıdaki web sitesini gösterir, siteyi güncellediğimizde
+uygulamayı yeniden kurmanıza gerek kalmadan otomatik güncel içerik gösterir.
+İlk birkaç kurulumda üstte ince bir adres çubuğu görülebilir; bu, Android'in
+"bu web sitesi gerçekten bu uygulamaya ait" doğrulamasını arka planda
+tamamlamasını beklediği içindir ve genellikle birkaç saat içinde kendiliğinden
+kaybolur; uygulamanın çalışmasını etkilemez.
+
 Kod `github.com/talsa422/sayac-okuma` adresinde herkese açık (public) bir
 depoda tutuluyor; bu sadece uygulamanın kaynak kodu, hiçbir bina/daire/okuma
 verisi değil. Verileriniz her zaman yalnızca kendi telefonunuzda saklanır,
-hiçbir sunucuya gönderilmez.
+hiçbir sunucuya gönderilmez. Android uygulamasının imzalama anahtarı da
+(ileride güncelleme yayınlayabilmek için gerekli) bilerek bu depoya değil,
+ayrı ve özel bir yere kondu.
+
+**iPhone için gerçek bir .ipa dosyası** aynı şekilde mümkün değil: Apple,
+bunu yalnızca bir Mac bilgisayar + Xcode + ücretli (yıllık 99 dolar) Apple
+Developer üyeliği ile izin veriyor; bu bilgisayarda (Windows) yapılamıyor.
+"Ana ekrana ekle" yöntemi iPhone için en pratik ve ücretsiz çözüm olmaya
+devam ediyor.
 
 ### Uygulamayı güncellemek
 
