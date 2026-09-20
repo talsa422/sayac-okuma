@@ -1,0 +1,174 @@
+:root{
+  --bg:#f5f7f6;
+  --surface:#ffffff;
+  --text:#1a2321;
+  --text-dim:#5c6b66;
+  --primary:#0f6e5e;
+  --primary-dark:#0a4f43;
+  --border:#dfe6e3;
+  --warn:#b8860b;
+  --warn-bg:#fff6e0;
+  --danger:#c0392b;
+  --danger-bg:#fdecea;
+  --ok:#1e7e34;
+  --ok-bg:#e9f7ef;
+  --radius:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#12181a;
+    --surface:#1b2426;
+    --text:#eef2f0;
+    --text-dim:#9fb0ab;
+    --primary:#3ecfae;
+    --primary-dark:#22a889;
+    --border:#2c3a38;
+    --warn:#e0b23e;
+    --warn-bg:#3a2f10;
+    --danger:#ff6b5e;
+    --danger-bg:#3a1512;
+    --ok:#5fd67f;
+    --ok-bg:#123a1e;
+  }
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+/* Buton/inputlar tarayıcı varsayılan olarak sayfa fontunu miras almaz;
+   iOS ve Android'de görünüm tutarlı olsun diye burada zorluyoruz. */
+button,input,select,textarea{font-family:inherit;-webkit-appearance:none;appearance:none;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  font-size:16px;
+  -webkit-tap-highlight-color:transparent;
+  overscroll-behavior-y:contain;
+}
+h1,h2,h3{margin:0.2em 0;}
+.hint{color:var(--text-dim);font-size:0.85rem;margin:0.4em 0;}
+code{background:var(--border);padding:0 4px;border-radius:4px;}
+
+.topbar{
+  position:sticky;top:0;z-index:10;
+  display:flex;align-items:center;gap:8px;
+  background:var(--primary);color:#fff;
+  /* iPhone çentiği/durum çubuğu altında kalmasın diye güvenli alan payı */
+  padding:calc(12px + env(safe-area-inset-top)) 12px 12px;
+}
+.topbar h1{font-size:1.15rem;flex:1;text-align:center;}
+.icon-btn{
+  background:transparent;border:none;color:#fff;
+  font-size:1.4rem;padding:6px 10px;border-radius:8px;cursor:pointer;
+}
+.icon-btn:active{background:rgba(255,255,255,0.2);}
+
+main#app{
+  padding:12px 12px 90px;max-width:640px;margin:0 auto;
+  padding-left:calc(12px + env(safe-area-inset-left));
+  padding-right:calc(12px + env(safe-area-inset-right));
+}
+.view[hidden]{display:none;}
+
+.search-row{margin-bottom:10px;}
+input[type=search],input[type=text],input[type=number],textarea{
+  width:100%;
+  padding:12px 14px;
+  font-size:1rem;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--surface);
+  color:var(--text);
+}
+textarea{font-family:monospace;font-size:0.95rem;}
+select{
+  padding:12px 36px 12px 14px;font-size:1rem;border:1px solid var(--border);
+  border-radius:10px;background-color:var(--surface);color:var(--text);
+  /* appearance:none yerel oku kaldırdığı için kendi okumuzu çiziyoruz
+     (iOS ve Android'de aynı görünsün diye) */
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235c6b66' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat:no-repeat;
+  background-position:right 10px center;
+  background-size:18px;
+}
+
+.quickgen{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:14px;margin-bottom:14px;
+}
+.quickgen h3{margin:0 0 4px;font-size:1rem;}
+.row-inline{display:flex;gap:10px;margin:10px 0;flex-wrap:wrap;align-items:flex-end;}
+.row-inline .field{flex:1;min-width:90px;}
+.row-inline .field label{display:block;font-size:0.8rem;color:var(--text-dim);margin-bottom:4px;}
+.row-inline select{flex:1;min-width:0;}
+
+.list{list-style:none;margin:0;padding:0;}
+.list li{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  margin-bottom:10px;
+  overflow:hidden;
+}
+
+/* Bina satırı */
+.building-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:16px;cursor:pointer;
+}
+.building-row .b-name{font-weight:600;font-size:1.05rem;}
+.building-row .b-progress{font-size:0.85rem;color:var(--text-dim);margin-top:2px;}
+.building-row .chev{color:var(--text-dim);font-size:1.4rem;}
+
+.building-toolbar{margin-bottom:12px;}
+.switcher-row{margin-bottom:10px;}
+.switcher-row label{display:block;font-size:0.8rem;color:var(--text-dim);margin-bottom:4px;}
+.switcher-row select{width:100%;font-weight:600;}
+.progress-text{font-weight:600;margin-bottom:8px;}
+.btn-row{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;}
+
+button{cursor:pointer;font-size:0.95rem;border:none;border-radius:10px;padding:10px 14px;}
+.btn-primary{background:var(--primary);color:#fff;font-weight:600;}
+.btn-primary:active{background:var(--primary-dark);}
+.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border);}
+.btn-warn{color:var(--warn);border-color:var(--warn);}
+.btn-danger{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger);}
+
+.fab{
+  position:fixed;left:16px;right:16px;
+  bottom:calc(16px + env(safe-area-inset-bottom));
+  max-width:608px;margin:0 auto;
+  display:block;width:calc(100% - 32px);
+  background:var(--primary);color:#fff;font-weight:700;font-size:1.05rem;
+  padding:16px;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,0.25);
+}
+
+/* Daire satırı */
+.apt-row{padding:14px 16px;}
+.apt-head{display:flex;justify-content:space-between;align-items:center;}
+.apt-head .a-no{font-weight:700;font-size:1.05rem;}
+.apt-head .a-status{font-size:0.85rem;padding:3px 10px;border-radius:20px;}
+.status-pending{background:var(--warn-bg);color:var(--warn);}
+.status-done{background:var(--ok-bg);color:var(--ok);}
+.apt-meta{color:var(--text-dim);font-size:0.85rem;margin-top:4px;}
+
+.apt-edit{margin-top:12px;border-top:1px dashed var(--border);padding-top:12px;}
+.apt-edit .row{display:flex;gap:10px;align-items:center;margin-bottom:10px;}
+.apt-edit label{flex:0 0 120px;color:var(--text-dim);font-size:0.9rem;}
+.apt-edit input{flex:1;font-size:1.3rem;font-weight:700;text-align:right;}
+.diff-line{font-weight:700;text-align:center;padding:10px;border-radius:10px;margin:8px 0;}
+.diff-ok{background:var(--ok-bg);color:var(--ok);}
+
+.form-row{margin-bottom:16px;}
+.form-row label{display:block;margin-bottom:6px;font-weight:600;}
+hr{border:none;border-top:1px solid var(--border);margin:18px 0;}
+.version{text-align:center;margin-top:24px;}
+
+.toast{
+  position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
+  background:var(--text);color:var(--bg);
+  padding:10px 18px;border-radius:20px;font-size:0.9rem;
+  box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:50;
+}
+.toast[hidden]{display:none;}
+
+.empty-state{text-align:center;color:var(--text-dim);padding:40px 20px;}

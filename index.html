@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0f6e5e">
+<!-- Android/Chrome: manifest zaten "standalone" modu sağlıyor. -->
+<meta name="mobile-web-app-capable" content="yes">
+<!-- iOS/Safari: manifest'i sinirli okur, ana ekrana eklenince tam ekran ve
+     durum cubugu rengi icin bu klasik Apple meta etiketleri gerekiyor. -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sayaç Okuma">
+<title>Sayaç Okuma</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <button id="btnBack" class="icon-btn" hidden aria-label="Geri">←</button>
+  <h1 id="pageTitle">Sayaç Okuma</h1>
+  <button id="btnSettings" class="icon-btn" aria-label="Ayarlar">⚙</button>
+</header>
+
+<main id="app">
+
+  <!-- ================= ANA EKRAN: BİNA LİSTESİ ================= -->
+  <section id="view-home" class="view">
+    <div class="search-row">
+      <input id="buildingSearch" type="search" placeholder="Bina ara...">
+    </div>
+    <ul id="buildingList" class="list"></ul>
+    <button id="btnAddBuilding" class="fab">+ Yeni Bina</button>
+  </section>
+
+  <!-- ================= BİNA DETAY: DAİRE LİSTESİ ================= -->
+  <section id="view-building" class="view" hidden>
+    <div class="building-toolbar">
+      <div class="switcher-row">
+        <label for="buildingSwitcher">Bina değiştir</label>
+        <select id="buildingSwitcher"></select>
+      </div>
+      <div id="buildingProgress" class="progress-text"></div>
+      <div class="btn-row">
+        <button id="btnManageApartments" class="btn-secondary">Daireleri Düzenle</button>
+        <button id="btnExportCsv" class="btn-secondary">CSV Dışa Aktar</button>
+        <button id="btnClosePeriod" class="btn-secondary btn-warn">Dönemi Kapat</button>
+      </div>
+    </div>
+    <ul id="apartmentList" class="list"></ul>
+  </section>
+
+  <!-- ================= DAİRE DÜZENLEME ================= -->
+  <section id="view-apartments-edit" class="view" hidden>
+
+    <div class="quickgen">
+      <h3>Hızlı Numara Oluştur</h3>
+      <p class="hint">Daire numaralarını tek tek yazmayın; aralığı verin, otomatik oluşsun.</p>
+      <div class="row-inline">
+        <div class="field">
+          <label>Başlangıç</label>
+          <input id="genStart" type="number" value="1" min="0">
+        </div>
+        <div class="field">
+          <label>Bitiş</label>
+          <input id="genEnd" type="number" min="0" placeholder="ör. 24">
+        </div>
+        <div class="field">
+          <label>Ön ek (ops.)</label>
+          <input id="genPrefix" type="text" placeholder="ör. Kat1-">
+        </div>
+      </div>
+      <button id="btnGenerate" class="btn-secondary">Numaraları Oluştur</button>
+    </div>
+
+    <div class="quickgen">
+      <h3>Başka Binadan Kopyala</h3>
+      <p class="hint">Aynı numaralandırmaya sahip bir bina varsa, daire numaralarını oradan kopyalayın.</p>
+      <div class="row-inline">
+        <select id="copyFromSelect"><option value="">-- bina seçin --</option></select>
+        <button id="btnCopyFrom" class="btn-secondary">Kopyala</button>
+      </div>
+    </div>
+
+    <p class="hint">Aşağıdaki liste otomatik dolar; isterseniz elle de düzenleyebilirsiniz. Format: <code>Daire No; Sayaç Seri No; Önceki Okuma</code> (seri no ve önceki okuma opsiyoneldir).</p>
+    <textarea id="apartmentsBulkText" rows="10" placeholder="1; ; 120,5&#10;2; SN-4521; 98&#10;3"></textarea>
+    <div class="btn-row">
+      <button id="btnSaveApartments" class="btn-primary">Kaydet</button>
+      <button id="btnImportCsvFile" class="btn-secondary">CSV Dosyasından İçe Aktar</button>
+      <input id="csvFileInput" type="file" accept=".csv,text/csv" hidden>
+    </div>
+  </section>
+
+  <!-- ================= AYARLAR ================= -->
+  <section id="view-settings" class="view" hidden>
+    <div class="form-row">
+      <button id="btnBackup" class="btn-secondary">Tüm Verileri Yedekle (JSON indir)</button>
+    </div>
+    <div class="form-row">
+      <button id="btnRestore" class="btn-secondary">Yedekten Geri Yükle</button>
+      <input id="restoreFileInput" type="file" accept="application/json" hidden>
+    </div>
+    <hr>
+    <div class="form-row">
+      <button id="btnWipe" class="btn-danger">Tüm Verileri Sil</button>
+    </div>
+    <p class="hint version">v1.0 — veriler yalnızca bu cihazda, tarayıcıda saklanır. Düzenli yedek almayı unutmayın.</p>
+  </section>
+
+</main>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
