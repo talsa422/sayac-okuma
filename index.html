@@ -119,13 +119,35 @@
     <div class="form-row">
       <button id="btnWipe" class="btn-danger">Tüm Verileri Sil</button>
     </div>
-    <p class="hint version">v1.0 — veriler yalnızca bu cihazda, tarayıcıda saklanır. Düzenli yedek almayı unutmayın.</p>
+    <hr>
+    <div class="form-row">
+      <label>Cihazlar Arası Senkronizasyon</label>
+      <p class="hint" id="syncStatus">Şu an yalnızca bu cihazda çalışıyor.</p>
+      <div id="syncDisconnected">
+        <input id="workspaceCodeInput" type="text" placeholder="Paylaşım kodu (varsa girin)" autocapitalize="characters">
+        <div class="btn-row">
+          <button id="btnSyncJoin" class="btn-secondary">Kodla Bağlan</button>
+          <button id="btnSyncCreate" class="btn-secondary">Yeni Paylaşımlı Alan Oluştur</button>
+        </div>
+      </div>
+      <div id="syncConnected" hidden>
+        <p class="hint">Paylaşım kodunuz: <strong id="syncCodeDisplay"></strong><br>Bu kodu diğer telefona girerek aynı bina/daire listesini görebilirsiniz.</p>
+        <button id="btnSyncDisconnect" class="btn-secondary">Bağlantıyı Kes (yerel moda dön)</button>
+      </div>
+    </div>
+    <p class="hint version">v1.0 — senkronizasyon kurulu değilse veriler yalnızca bu cihazda saklanır. Düzenli yedek almayı unutmayın.</p>
   </section>
 
 </main>
 
 <div id="toast" class="toast" hidden></div>
 
+<!-- Cihazlar arası senkronizasyon (opsiyonel) için Firebase. Firebase yapılandırılmadığı
+     sürece (js/sync.js içindeki FIREBASE_CONFIG) bu kütüphaneler yüklenir ama hiçbir
+     şey yapmaz; uygulama tamamen yerel modda çalışmaya devam eder. -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="js/sync.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

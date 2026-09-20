@@ -35,6 +35,23 @@ function saveDB() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
 }
 
+/**
+ * Bir binadaki değişikliği kalıcı hale getirir: her zaman yerel olarak
+ * (localStorage), senkronizasyon açıksa AYRICA paylaşımlı buluta yazar.
+ * Bina/daire ekleme, silme, okuma girme gibi her değişiklikten sonra
+ * saveDB() yerine bu fonksiyon çağrılır.
+ */
+function persistBuilding(building) {
+  saveDB();
+  if (typeof pushBuildingToCloud === 'function') pushBuildingToCloud(building);
+}
+
+/** Yedekten geri yükleme gibi toplu değişikliklerden sonra tüm binaları buluta gönderir. */
+function pushAllBuildingsToCloud() {
+  if (typeof pushBuildingToCloud !== 'function') return;
+  db.buildings.forEach(b => pushBuildingToCloud(b));
+}
+
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
@@ -125,7 +142,7 @@ function restoreApartmentFromTrash(trashId) {
   const restored = { ...entry.apartment, id: uid() };
   building.apartments.push(restored);
   db.trash = db.trash.filter(t => t.id !== trashId);
-  saveDB();
+  persistBuilding(building);
   if (currentBuildingId === building.id) renderApartmentList();
   toast('Daire ' + restored.no + ' geri getirildi (' + building.name + ')');
 }
@@ -257,7 +274,7 @@ document.getElementById('buildingNote').addEventListener('change', e => {
   const b = getBuilding(currentBuildingId);
   if (!b) return;
   b.note = e.target.value.trim();
-  saveDB();
+  persistBuilding(b);
 });
 
 document.getElementById('buildingSearch').addEventListener('input', e => {
@@ -269,7 +286,7 @@ document.getElementById('btnAddBuilding').addEventListener('click', () => {
   if (!name || !name.trim()) return;
   const b = { id: uid(), name: name.trim(), apartments: [], note: '' };
   db.buildings.push(b);
-  saveDB();
+  persistBuilding(b);
   renderBuildingList();
   openBuilding(b.id);
 });
@@ -321,13 +338,22 @@ function renderApartmentList() {
   });
 }
 
+// Bir okuma formu açıkken uzaktan (başka cihazdan) gelen güncellemenin o anki
+// yazılmakta olan değerin üstüne yazmasını önlemek için: form açıkken erteleriz,
+// form kapanınca/kaydedilince varsa bekleyen güncellemeyi uygularız.
+let deferRemoteRender = false;
+let pendingRemoteRender = false;
+
 function toggleApartmentEdit(id, li) {
   if (openApartmentId === id) {
     openApartmentId = null;
+    deferRemoteRender = false;
     renderApartmentList();
+    if (pendingRemoteRender) { pendingRemoteRender = false; renderApartmentList(); }
     return;
   }
   openApartmentId = id;
+  deferRemoteRender = true;
   renderApartmentList();
   // yeni açılan satırı görünür alana kaydır
   setTimeout(() => {
@@ -420,7 +446,7 @@ function renderApartmentEdit(li, a) {
     openApartmentId = null;
     addToTrash(b, a);
     const trashId = db.trash[0].id;
-    saveDB();
+    persistBuilding(b);
     renderApartmentList();
     toast('Daire ' + a.no + ' silindi', 'Geri Al', () => restoreApartmentFromTrash(trashId));
   });
@@ -451,7 +477,7 @@ function renderApartmentEdit(li, a) {
     a.currentReading = val;
     a.currentDate = todayISO();
     a.note = slot.querySelector(`#inp-note-${a.id}`).value.trim();
-    saveDB();
+    persistBuilding(b);
     toast('Kaydedildi: Daire ' + a.no);
 
     if (goNext) {
@@ -462,7 +488,9 @@ function renderApartmentEdit(li, a) {
     } else {
       openApartmentId = null;
     }
+    deferRemoteRender = !!openApartmentId;
     renderApartmentList();
+    if (pendingRemoteRender && !deferRemoteRender) { pendingRemoteRender = false; renderApartmentList(); }
     if (goNext && openApartmentId) {
       setTimeout(() => {
         const head = document.querySelector(`.apt-head[data-id="${openApartmentId}"]`);
@@ -497,7 +525,7 @@ document.getElementById('btnClosePeriod').addEventListener('click', () => {
       a.currentDate = null;
     }
   });
-  saveDB();
+  persistBuilding(b);
   renderApartmentList();
   toast('Dönem kapatıldı');
   setTimeout(maybeShowBackupReminder, 400);
@@ -604,7 +632,7 @@ document.getElementById('btnSaveApartments').addEventListener('click', () => {
   if (!b) return;
   const text = document.getElementById('apartmentsBulkText').value;
   applyBulkApartments(b, text);
-  saveDB();
+  persistBuilding(b);
   goBack();
   renderApartmentList();
   toast('Daire listesi güncellendi');
@@ -661,7 +689,72 @@ document.getElementById('btnSettings').addEventListener('click', () => {
   updateBackupStatus();
   renderTrashList();
   updateWipeRestoreVisibility();
+  updateSyncUI();
   navigate('settings');
+});
+
+// ---------- Cihazlar arası senkronizasyon (Ayarlar ekranı) ----------
+
+function updateSyncUI() {
+  const code = getWorkspaceCode();
+  const disc = document.getElementById('syncDisconnected');
+  const conn = document.getElementById('syncConnected');
+  if (!disc || !conn) return;
+  disc.hidden = !!code;
+  conn.hidden = !code;
+  document.getElementById('syncCodeDisplay').textContent = code;
+  document.getElementById('syncStatus').textContent = code
+    ? 'Bu cihaz paylaşımlı bir alana bağlı.'
+    : 'Şu an yalnızca bu cihazda çalışıyor.';
+}
+
+/** Sayfa yenilenmeden bina listesini uzaktan gelen veriyle günceller. */
+function handleRemoteBuildingsUpdate(buildings) {
+  db.buildings = buildings;
+  saveDB();
+  if (deferRemoteRender) { pendingRemoteRender = true; return; }
+  const activeView = viewStack[viewStack.length - 1];
+  if (activeView === 'home') renderBuildingList();
+  else if (activeView === 'building') renderApartmentList();
+}
+
+function attachRemoteListener() {
+  startSyncIfConfigured(handleRemoteBuildingsUpdate, () => {});
+}
+
+document.getElementById('btnSyncCreate').addEventListener('click', async () => {
+  try {
+    const code = await createWorkspaceFromLocal(db.buildings);
+    toast('Paylaşımlı alan oluşturuldu: ' + code);
+    updateSyncUI();
+    attachRemoteListener();
+  } catch (e) {
+    alert(e.message);
+  }
+});
+
+document.getElementById('btnSyncJoin').addEventListener('click', async () => {
+  const code = document.getElementById('workspaceCodeInput').value.trim().toUpperCase();
+  if (!code) { toast('Bir kod girin'); return; }
+  if (!confirm('Bu kodla bağlanırsanız, bu cihazdaki mevcut bina listesi paylaşımlı alandaki listeyle değiştirilecek. Devam edilsin mi?')) return;
+  try {
+    const buildings = await joinWorkspace(code);
+    db.buildings = buildings;
+    saveDB();
+    toast('Bağlandı: ' + code);
+    updateSyncUI();
+    attachRemoteListener();
+    renderBuildingList();
+  } catch (e) {
+    alert(e.message);
+  }
+});
+
+document.getElementById('btnSyncDisconnect').addEventListener('click', () => {
+  if (!confirm('Senkronizasyon kapatılsın mı? Veriler bu cihazda yerel olarak kalmaya devam edecek.')) return;
+  disconnectSync();
+  updateSyncUI();
+  toast('Senkronizasyon kapatıldı');
 });
 
 function downloadBackup() {
@@ -722,6 +815,7 @@ document.getElementById('restoreFileInput').addEventListener('change', async e =
     db.settings = db.settings || {};
     db.trash = db.trash || [];
     saveDB();
+    pushAllBuildingsToCloud();
     toast('Yedek geri yüklendi');
     renderBuildingList();
     updateBackupStatus();
@@ -747,6 +841,7 @@ document.getElementById('btnRestoreWipe').addEventListener('click', () => {
     db.settings = db.settings || {};
     db.trash = db.trash || [];
     saveDB();
+    pushAllBuildingsToCloud();
     toast('Silinen veriler geri getirildi');
     renderBuildingList();
     updateBackupStatus();
@@ -757,13 +852,19 @@ document.getElementById('btnRestoreWipe').addEventListener('click', () => {
 });
 
 document.getElementById('btnWipe').addEventListener('click', () => {
-  if (!confirm('TÜM binalar ve okumalar silinecek. Bu işlem geri alınamaz. Devam edilsin mi?')) return;
+  const connected = !!getWorkspaceCode();
+  const extra = connected
+    ? ' Bu cihaz paylaşımlı bir alana bağlı; silme işlemi yalnızca bu cihazı etkileyecek ve bağlantı kesilecek, paylaşılan veriler diğer cihazlarda kalmaya devam edecek.'
+    : '';
+  if (!confirm('TÜM binalar ve okumalar silinecek. Bu işlem geri alınamaz.' + extra + ' Devam edilsin mi?')) return;
   if (!confirm('Son kez soruyoruz: gerçekten tüm veriler silinsin mi?')) return;
   try { localStorage.setItem(WIPE_BACKUP_KEY, JSON.stringify(db)); } catch (e) { /* yer yoksa sessizce geç */ }
+  if (connected) disconnectSync();
   db = { buildings: [], settings: {}, trash: [] };
   saveDB();
   toast('Tüm veriler silindi');
   updateWipeRestoreVisibility();
+  updateSyncUI();
   goHome();
 });
 
@@ -788,6 +889,7 @@ function escapeHtml(s) {
 renderBuildingList();
 showView('home');
 setTimeout(maybeShowBackupReminder, 800);
+if (typeof attachRemoteListener === 'function') attachRemoteListener();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

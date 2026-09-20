@@ -3,7 +3,9 @@
 Konvektörü olmayan binalarda, şaft içindeki sıcak su sayaçlarını gözle okurken
 kullanılan basit, çevrimdışı çalışan bir uygulama. Sunucu yok, kurulum yok;
 telefonun tarayıcısında açılır ve ana ekrana eklenip normal bir uygulama gibi
-kullanılabilir. Tüm veriler yalnızca kullandığınız cihazda saklanır.
+kullanılabilir. Varsayılan olarak tüm veriler yalnızca kullandığınız cihazda
+saklanır; isterseniz (aşağıdaki "Cihazlar Arası Senkronizasyon Kurulumu"
+bölümüne bakın) birden fazla telefon arasında paylaşımlı hale de getirebilirsiniz.
 
 ## Neler yapar
 
@@ -56,6 +58,12 @@ kullanılabilir. Tüm veriler yalnızca kullandığınız cihazda saklanır.
   çalışacak ve görünecek şekilde hazırlandı (çentikli iPhone'larda içerik
   kesilmez, "ana ekrana ekle" sonrası tam ekran açılır, buton/liste
   seçici gibi kontroller iki tarafta da aynı görünür).
+- **Cihazlar arası senkronizasyon (opsiyonel)**: Kurulumu yaptıktan sonra
+  (bkz. aşağıdaki bölüm), Ayarlar'dan bir paylaşım kodu oluşturup başka
+  telefonlara girerek aynı bina/daire listesini ve okumaları birden fazla
+  cihazdan görebilir, birlikte çalışabilirsiniz. Değişiklikler internet
+  bağlantısı olan her cihaza otomatik yansır; şaftta internet yoksa
+  okumaya devam edersiniz, bağlantı gelince kendiliğinden senkronize olur.
 
 ## Nasıl kullanılır (ilk kurulum)
 
@@ -109,6 +117,43 @@ git push
 Birkaç dakika içinde aynı adres güncel sürümü gösterir; telefonda uygulamayı
 kapatıp yeniden açmanız yeterli (arka planda otomatik güncellenir).
 
+## Cihazlar Arası Senkronizasyon Kurulumu
+
+Bu özellik **opsiyoneldir** ve şu anda kapalı gelir; kurmadığınız sürece
+uygulama bugünkü gibi tek cihazda, tamamen yerel çalışmaya devam eder.
+Birden fazla telefon/kişi aynı bina listesini görsün istiyorsanız, ücretsiz
+bir Google hesabıyla bir kere kurulum yapmanız gerekiyor (yaklaşık 5 dakika):
+
+1. https://console.firebase.google.com adresine gidin, Google hesabınızla
+   giriş yapıp **"Add project" / "Proje ekle"** ile yeni bir proje oluşturun
+   (kredi kartı istemez, ücretsiz plan yeterli).
+2. Sol menüden **Build > Firestore Database** açın, **"Create database"**
+   ile bir veritabanı oluşturun (test modunda başlatabilirsiniz).
+3. Sol üstteki dişli simgesinden **Project settings** açın, aşağıda
+   **"Your apps"** bölümünden **"Add app" > Web (</>)** simgesine tıklayıp
+   bir isim verin. Size bir `firebaseConfig` nesnesi gösterecek, örneğin:
+   ```js
+   const firebaseConfig = {
+     apiKey: "AIza...",
+     authDomain: "proje-adi.firebaseapp.com",
+     projectId: "proje-adi",
+     storageBucket: "proje-adi.appspot.com",
+     messagingSenderId: "...",
+     appId: "...",
+   };
+   ```
+4. Bu nesneyi bana (veya doğrudan [js/sync.js](js/sync.js) dosyasındaki
+   `FIREBASE_CONFIG` satırına) iletin, `null` yerine bu değerleri yazıp
+   yayına alalım.
+
+Kurulumdan sonra Ayarlar ekranında **"Yeni Paylaşımlı Alan Oluştur"**'a
+basan ilk cihaz bir kod alır (ör. `AB3XQZ9K`); bu kodu diğer telefon(lar)da
+**"Kodla Bağlan"** alanına girmeniz yeterli. Bağlı cihazlar birbirini
+otomatik görür. Not: silinen daireler ve JSON yedekleri hâlâ cihaza özeldir
+(sadece bina/daire/okuma verileri paylaşılır); "Tüm Verileri Sil" bir
+paylaşımlı alandayken sadece o cihazı sıfırlar, diğer cihazlardaki paylaşılan
+veriyi etkilemez.
+
 ## Kullanım akışı
 
 1. **+ Yeni Bina** ile binayı ekleyin.
@@ -125,8 +170,11 @@ kapatıp yeniden açmanız yeterli (arka planda otomatik güncellenir).
 
 ## Sınırlamalar / bilinen kısıtlar
 
-- Veriler yalnızca kullanılan cihaz+tarayıcıda saklanır (localStorage);
-  birden fazla telefondan aynı veriye erişim şu an desteklenmiyor.
+- Senkronizasyon kurulmadığı sürece veriler yalnızca kullanılan
+  cihaz+tarayıcıda saklanır (localStorage).
+- Senkronizasyon açıkken, aynı dairenin okumasını iki cihazdan TAM AYNI ANDA
+  değiştirirseniz son kaydeden kazanır (basit "son yazan kazanır" mantığı).
+  Farklı daireler/binalar üzerinde aynı anda çalışmak güvenlidir.
 - Fotoğraf kanıtı henüz yok (v1 kapsamı dışında bırakıldı, veri boyutu
   büyümesin diye); gerekirse ikinci sürümde eklenebilir.
 
@@ -134,11 +182,7 @@ kapatıp yeniden açmanız yeterli (arka planda otomatik güncellenir).
 
 - Odaklı tam ekran okuma modu (o anki daireyi büyük gösterip kaydırarak
   sıradakine geçen bir mod, liste içi form yerine).
-- Kamerayla sayaç rakamını otomatik okuma (OCR) — hız kazandırır ama doğruluk
-  testi gerektirir, faturalama verisi olduğu için dikkatli değerlendirilmeli.
 - QR/barkod ile daire eşleştirme (sayaçta barkod varsa, doğru daireyi
   otomatik bulur).
 - Fotoğraf kanıtı (itiraz durumunda gösterilebilecek sayaç fotoğrafı).
-- Birden fazla cihaz arasında senkronizasyon (basit bir bulut deposu ile) —
-  bu, en büyük mimari değişiklik olur, ayrıca planlanmalı.
 - İstatistik özeti ve bina etiketleme (ör. "bu ay bitti", "sorunlu").

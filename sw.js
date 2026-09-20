@@ -2,12 +2,13 @@
 // ziyaretlerde internet olmasa bile açılmasını sağlar. Veriler zaten
 // localStorage'da saklandığı için burada sadece dosyaları önbellekliyoruz.
 
-const CACHE_NAME = 'sayac-okuma-v4';
+const CACHE_NAME = 'sayac-okuma-v5';
 const ASSETS = [
   './',
   './index.html',
   './css/style.css',
   './js/app.js',
+  './js/sync.js',
   './manifest.webmanifest',
   './icons/icon.svg',
   './icons/icon-180.png',

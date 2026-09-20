@@ -180,6 +180,10 @@ hr{border:none;border-top:1px solid var(--border);margin:18px 0;}
 }
 .trash-title{font-weight:600;font-size:0.92rem;}
 
+#workspaceCodeInput{text-transform:uppercase;letter-spacing:1px;}
+#syncCodeDisplay{font-size:1.2rem;letter-spacing:2px;color:var(--primary);}
+@media (prefers-color-scheme: dark){ #syncCodeDisplay{color:var(--primary);} }
+
 .toast{
   position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
   max-width:calc(100% - 32px);
