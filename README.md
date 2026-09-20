@@ -17,9 +17,19 @@ kullanılabilir. Tüm veriler yalnızca kullandığınız cihazda saklanır.
   değerlerini girersiniz.
 - **Hızlı okuma girişi**: Her daireye dokunup yeni değeri girersiniz; önceki
   okuma her zaman ekranda görünür.
-- **Yanlış eklenen daireyi silme**: Bir daireye dokunduğunuzda açılan
-  formda **Bu Daireyi Sil** düğmesi vardır; yanlışlıkla eklenen veya
-  gerekmeyen bir daireyi onay isteyerek kaldırır.
+- **Yanlış eklenen daireyi silme + geri alma**: Bir daireye dokunduğunuzda
+  açılan formda **Bu Daireyi Sil** düğmesi vardır. Sildikten hemen sonra
+  çıkan bildirimdeki **Geri Al**'a basarak anında geri getirebilir, ya da
+  daha sonra Ayarlar'daki **Son Silinen Daireler** listesinden istediğiniz
+  zaman geri getirebilirsiniz. **Tüm Verileri Sil** ile yapılan toplu
+  silme de aynı şekilde korumalı: Ayarlar'da beliren **Silinen Tüm
+  Verileri Geri Getir** düğmesiyle son silinen her şeyi geri alabilirsiniz.
+- **Sesli okuma girişi (Android)**: Okuma alanının yanındaki 🎤 düğmesine
+  basıp rakamı söyleyerek girebilirsiniz; elleriniz meşgulken (fener,
+  kapı vb.) yazmaktan daha hızlıdır. Bu, tarayıcının konuşma tanıma
+  desteğine bağlı olduğu için şu an yalnızca Android/Chrome'da çalışıyor;
+  iPhone'da Safari bu özelliği desteklemediğinden düğme görünmez, ama
+  iOS'un kendi klavyesindeki mikrofon tuşuyla zaten dikte yapabilirsiniz.
 - **Binalar arası hızlı geçiş**: Bina ekranının üstündeki **Bina değiştir**
   açılır listesinden, ana ekrana dönmeden doğrudan başka bir binaya
   geçebilirsiniz.
@@ -32,9 +42,12 @@ kullanılabilir. Tüm veriler yalnızca kullandığınız cihazda saklanır.
 - **CSV dışa aktarım**: Her bina için Türkçe Excel'de doğrudan açılacak
   şekilde (noktalı virgülle ayrılmış, ondalık virgüllü, UTF-8) CSV indirir.
   Bunu faturalama sisteminize aktarabilirsiniz.
-- **Yedekleme**: Ayarlar ekranından tüm verinizi tek bir JSON dosyası olarak
-  indirip saklayabilir, gerekirse geri yükleyebilirsiniz. Tarayıcı verisi
-  temizlenirse veri kaybını önlemenin tek yolu düzenli yedek almaktır.
+- **Yedekleme + hatırlatma**: Ayarlar ekranından tüm verinizi tek bir JSON
+  dosyası olarak indirip saklayabilir, gerekirse geri yükleyebilirsiniz.
+  Son yedeğinizin üzerinden 7 günden fazla geçtiyse (veya hiç almadıysanız),
+  bir dönemi kapattığınızda veya uygulamayı açtığınızda size nazikçe
+  hatırlatır. Tarayıcı verisi temizlenirse veri kaybını önlemenin tek yolu
+  düzenli yedek almaktır.
 - **Çevrimdışı çalışır**: Şaftlarda genelde internet olmadığı için uygulama
   bir kere yüklendikten sonra internetsiz de açılır ve çalışır.
 - **Hem iPhone hem Android**: Arayüz her iki platformda da aynı şekilde
@@ -117,7 +130,14 @@ kapatıp yeniden açmanız yeterli (arka planda otomatik güncellenir).
 
 ## Sonraki adım fikirleri
 
+- Odaklı tam ekran okuma modu (o anki daireyi büyük gösterip kaydırarak
+  sıradakine geçen bir mod, liste içi form yerine).
 - Kamerayla sayaç rakamını otomatik okuma (OCR) — hız kazandırır ama doğruluk
   testi gerektirir, faturalama verisi olduğu için dikkatli değerlendirilmeli.
-- Birden fazla cihaz arasında senkronizasyon (basit bir bulut deposu ile).
-- Bina bazında not/uyarı geçmişi (ör. "bu daire her ay yüksek okunuyor").
+- QR/barkod ile daire eşleştirme (sayaçta barkod varsa, doğru daireyi
+  otomatik bulur).
+- Fotoğraf kanıtı (itiraz durumunda gösterilebilecek sayaç fotoğrafı).
+- Bina bazında kalıcı not (ör. "kapıcı bilgisi", "şaft anahtarı yönetimde").
+- Birden fazla cihaz arasında senkronizasyon (basit bir bulut deposu ile) —
+  bu, en büyük mimari değişiklik olur, ayrıca planlanmalı.
+- İstatistik özeti ve bina etiketleme (ör. "bu ay bitti", "sorunlu").

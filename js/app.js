@@ -4,6 +4,8 @@
 // ============================================================
 
 const STORAGE_KEY = 'sayacDB_v1';
+const WIPE_BACKUP_KEY = 'sayacDB_v1_lastWipeBackup';
+const BACKUP_REMINDER_DAYS = 7;
 
 /** @typedef {{id:string,no:string,serial:string,previousReading:number|null,previousDate:string|null,currentReading:number|null,currentDate:string|null,note:string}} Apartment */
 /** @typedef {{id:string,name:string,apartments:Apartment[]}} Building */
@@ -17,11 +19,16 @@ let openApartmentId = null; // hangi dairenin okuma formu açık
 function loadDB() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      parsed.settings = parsed.settings || {};
+      parsed.trash = parsed.trash || [];
+      return parsed;
+    }
   } catch (e) {
     console.error('DB okunamadı', e);
   }
-  return { buildings: [], settings: {} };
+  return { buildings: [], settings: {}, trash: [] };
 }
 
 function saveDB() {
@@ -57,12 +64,28 @@ function fmtNum(n) {
   return n.toLocaleString('tr-TR', { maximumFractionDigits: 3 });
 }
 
-function toast(msg) {
+/** actionLabel/actionFn verilirse toast'a bir eylem düğmesi (ör. "Geri Al") eklenir. */
+function toast(msg, actionLabel, actionFn) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
+  t.innerHTML = '';
+  const span = document.createElement('span');
+  span.textContent = msg;
+  t.appendChild(span);
+  if (actionLabel && actionFn) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'toast-action';
+    btn.textContent = actionLabel;
+    btn.addEventListener('click', () => {
+      clearTimeout(toast._h);
+      t.hidden = true;
+      actionFn();
+    });
+    t.appendChild(btn);
+  }
   t.hidden = false;
   clearTimeout(toast._h);
-  toast._h = setTimeout(() => (t.hidden = true), 2200);
+  toast._h = setTimeout(() => (t.hidden = true), actionLabel ? 6000 : 2200);
 }
 
 function getBuilding(id) {
@@ -77,6 +100,59 @@ function buildingProgress(b) {
   const total = b.apartments.length;
   const done = b.apartments.filter(apartmentDone).length;
   return { total, done };
+}
+
+// ---------- Silinenler / Geri Al ----------
+
+/** Silinen bir daireyi, geri getirilebilmesi için "silinenler" listesine ekler. */
+function addToTrash(building, apartment) {
+  db.trash = db.trash || [];
+  db.trash.unshift({
+    id: uid(),
+    buildingId: building.id,
+    buildingName: building.name,
+    apartment: JSON.parse(JSON.stringify(apartment)),
+    deletedAt: new Date().toISOString(),
+  });
+  if (db.trash.length > 30) db.trash.length = 30;
+}
+
+function restoreApartmentFromTrash(trashId) {
+  const entry = (db.trash || []).find(t => t.id === trashId);
+  if (!entry) { toast('Bu daire artık geri getirilemiyor'); return; }
+  const building = getBuilding(entry.buildingId);
+  if (!building) { toast('Bina bulunamadı, geri getirilemedi'); return; }
+  const restored = { ...entry.apartment, id: uid() };
+  building.apartments.push(restored);
+  db.trash = db.trash.filter(t => t.id !== trashId);
+  saveDB();
+  if (currentBuildingId === building.id) renderApartmentList();
+  toast('Daire ' + restored.no + ' geri getirildi (' + building.name + ')');
+}
+
+function renderTrashList() {
+  const container = document.getElementById('trashList');
+  if (!container) return;
+  const trash = db.trash || [];
+  if (trash.length === 0) {
+    container.innerHTML = '<p class="hint">Silinen daire yok.</p>';
+    return;
+  }
+  container.innerHTML = trash.slice(0, 15).map(t => `
+    <div class="trash-row">
+      <div>
+        <div class="trash-title">Daire ${escapeHtml(t.apartment.no)} — ${escapeHtml(t.buildingName)}</div>
+        <div class="apt-meta">${new Date(t.deletedAt).toLocaleString('tr-TR')}</div>
+      </div>
+      <button type="button" class="btn-secondary btn-restore-trash" data-id="${t.id}">Geri Getir</button>
+    </div>
+  `).join('');
+  container.querySelectorAll('.btn-restore-trash').forEach(btn => {
+    btn.addEventListener('click', () => {
+      restoreApartmentFromTrash(btn.dataset.id);
+      renderTrashList();
+    });
+  });
 }
 
 // ---------- Ekran yönetimi ----------
@@ -254,6 +330,56 @@ function toggleApartmentEdit(id, li) {
   }, 50);
 }
 
+// ---------- Sesli giriş ----------
+
+const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+/** Mikrofon düğmesini, tarayıcı destekliyorsa aktif eder; desteklemiyorsa (ör. iOS Safari) gizli kalır. */
+function setupMicButton(micBtn, input) {
+  if (!micBtn || !input) return;
+  if (!SpeechRecognitionCtor) {
+    micBtn.remove();
+    return;
+  }
+  micBtn.hidden = false;
+  let recognizing = false;
+  let recognizer = null;
+
+  micBtn.addEventListener('click', () => {
+    if (recognizing) { recognizer && recognizer.stop(); return; }
+    try {
+      recognizer = new SpeechRecognitionCtor();
+    } catch (e) {
+      toast('Sesli giriş bu cihazda başlatılamadı');
+      return;
+    }
+    recognizer.lang = 'tr-TR';
+    recognizer.interimResults = false;
+    recognizer.maxAlternatives = 1;
+
+    recognizer.onstart = () => {
+      recognizing = true;
+      micBtn.classList.add('listening');
+    };
+    recognizer.onresult = (ev) => {
+      const transcript = ev.results[0][0].transcript || '';
+      const digits = (transcript.match(/[\d.,]+/g) || []).join('');
+      input.value = digits || transcript;
+      input.dispatchEvent(new Event('input'));
+      input.focus();
+      toast('Duyulan: "' + transcript + '"');
+    };
+    recognizer.onerror = () => {
+      toast('Ses tanınamadı, tekrar deneyin veya elle yazın');
+    };
+    recognizer.onend = () => {
+      recognizing = false;
+      micBtn.classList.remove('listening');
+    };
+    recognizer.start();
+  });
+}
+
 function renderApartmentEdit(li, a) {
   const slot = li.querySelector('.apt-edit-slot');
   const b = getBuilding(currentBuildingId);
@@ -264,6 +390,7 @@ function renderApartmentEdit(li, a) {
         <input id="inp-current-${a.id}" type="text" inputmode="decimal"
                value="${a.currentReading !== null ? String(a.currentReading).replace('.', ',') : ''}"
                placeholder="m³">
+        <button type="button" class="mic-btn" id="mic-${a.id}" title="Sesle söyle" hidden>🎤</button>
       </div>
       <div id="diffline-${a.id}"></div>
       <div class="row">
@@ -280,16 +407,19 @@ function renderApartmentEdit(li, a) {
     </div>`;
 
   slot.querySelector(`#btn-delete-${a.id}`).addEventListener('click', () => {
-    const warn = apartmentDone(a)
-      ? `Daire ${a.no} silinsin mi? Bu dairenin kayıtlı okuması da silinecek. Bu işlem geri alınamaz.`
-      : `Daire ${a.no} silinsin mi? Bu işlem geri alınamaz.`;
-    if (!confirm(warn)) return;
+    if (!confirm(`Daire ${a.no} silinsin mi?`)) return;
     b.apartments = b.apartments.filter(x => x.id !== a.id);
     openApartmentId = null;
+    addToTrash(b, a);
+    const trashId = db.trash[0].id;
     saveDB();
     renderApartmentList();
-    toast('Daire ' + a.no + ' silindi');
+    toast('Daire ' + a.no + ' silindi', 'Geri Al', () => restoreApartmentFromTrash(trashId));
   });
+
+  // Sesli giriş: sadece tarayıcı destekliyorsa (bugün için çoğunlukla Android/Chrome;
+  // iOS Safari bu web API'sini desteklemiyor ama klavyedeki mikrofon tuşuyla zaten dikte edilebiliyor).
+  setupMicButton(slot.querySelector(`#mic-${a.id}`), slot.querySelector(`#inp-current-${a.id}`));
 
   const input = slot.querySelector(`#inp-current-${a.id}`);
   const updateDiff = () => {
@@ -362,6 +492,7 @@ document.getElementById('btnClosePeriod').addEventListener('click', () => {
   saveDB();
   renderApartmentList();
   toast('Dönem kapatıldı');
+  setTimeout(maybeShowBackupReminder, 400);
 });
 
 // ---------- CSV dışa aktarım (Türkçe Excel uyumlu: ; ayraç, , ondalık, UTF-8 BOM) ----------
@@ -519,10 +650,13 @@ document.getElementById('csvFileInput').addEventListener('change', async e => {
 // ---------- Ayarlar ----------
 
 document.getElementById('btnSettings').addEventListener('click', () => {
+  updateBackupStatus();
+  renderTrashList();
+  updateWipeRestoreVisibility();
   navigate('settings');
 });
 
-document.getElementById('btnBackup').addEventListener('click', () => {
+function downloadBackup() {
   const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -530,7 +664,40 @@ document.getElementById('btnBackup').addEventListener('click', () => {
   link.download = `sayac_yedek_${todayISO()}.json`;
   link.click();
   URL.revokeObjectURL(url);
-});
+  db.settings.lastBackupAt = new Date().toISOString();
+  saveDB();
+  updateBackupStatus();
+}
+
+document.getElementById('btnBackup').addEventListener('click', downloadBackup);
+
+function updateBackupStatus() {
+  const el = document.getElementById('lastBackupInfo');
+  if (!el) return;
+  const last = db.settings.lastBackupAt;
+  el.textContent = last
+    ? `Son yedek: ${new Date(last).toLocaleString('tr-TR')}`
+    : 'Henüz yedek alınmadı.';
+}
+
+/** Belirli günden uzun süredir yedek alınmamışsa, kullanıcıya nazikçe hatırlatır (günde en fazla bir kez). */
+function daysSince(isoDateStr) {
+  if (!isoDateStr) return Infinity;
+  return (Date.now() - new Date(isoDateStr).getTime()) / (1000 * 60 * 60 * 24);
+}
+
+function maybeShowBackupReminder() {
+  if (db.buildings.length === 0) return;
+  if (daysSince(db.settings.lastBackupAt) < BACKUP_REMINDER_DAYS) return;
+  if (daysSince(db.settings.lastBackupPromptAt) < 1) return;
+  db.settings.lastBackupPromptAt = new Date().toISOString();
+  saveDB();
+  const last = db.settings.lastBackupAt;
+  const msg = last
+    ? `Son yedeğiniz ${Math.floor(daysSince(last))} gün önce alınmış. Şimdi yedek almak ister misiniz?`
+    : 'Henüz hiç yedek almadınız. Verilerinizi kaybetmemek için şimdi yedek almak ister misiniz?';
+  if (confirm(msg)) downloadBackup();
+}
 
 document.getElementById('btnRestore').addEventListener('click', () => {
   document.getElementById('restoreFileInput').click();
@@ -545,21 +712,50 @@ document.getElementById('restoreFileInput').addEventListener('change', async e =
     if (!confirm('Mevcut tüm veriler bu yedekle değiştirilecek. Emin misiniz?')) return;
     db = parsed;
     db.settings = db.settings || {};
+    db.trash = db.trash || [];
     saveDB();
     toast('Yedek geri yüklendi');
     renderBuildingList();
+    updateBackupStatus();
+    renderTrashList();
   } catch (err) {
     alert('Yedek dosyası okunamadı: ' + err.message);
   }
   e.target.value = '';
 });
 
+function updateWipeRestoreVisibility() {
+  const row = document.getElementById('wipeRestoreRow');
+  if (!row) return;
+  row.hidden = !localStorage.getItem(WIPE_BACKUP_KEY);
+}
+
+document.getElementById('btnRestoreWipe').addEventListener('click', () => {
+  const raw = localStorage.getItem(WIPE_BACKUP_KEY);
+  if (!raw) return;
+  if (!confirm('Silinen tüm veriler geri getirilsin mi? Şu anki veriler (varsa) bunun üzerine yazılacak.')) return;
+  try {
+    db = JSON.parse(raw);
+    db.settings = db.settings || {};
+    db.trash = db.trash || [];
+    saveDB();
+    toast('Silinen veriler geri getirildi');
+    renderBuildingList();
+    updateBackupStatus();
+    renderTrashList();
+  } catch (err) {
+    alert('Geri getirilemedi: ' + err.message);
+  }
+});
+
 document.getElementById('btnWipe').addEventListener('click', () => {
   if (!confirm('TÜM binalar ve okumalar silinecek. Bu işlem geri alınamaz. Devam edilsin mi?')) return;
   if (!confirm('Son kez soruyoruz: gerçekten tüm veriler silinsin mi?')) return;
-  db = { buildings: [], settings: {} };
+  try { localStorage.setItem(WIPE_BACKUP_KEY, JSON.stringify(db)); } catch (e) { /* yer yoksa sessizce geç */ }
+  db = { buildings: [], settings: {}, trash: [] };
   saveDB();
   toast('Tüm veriler silindi');
+  updateWipeRestoreVisibility();
   goHome();
 });
 
@@ -583,6 +779,7 @@ function escapeHtml(s) {
 
 renderBuildingList();
 showView('home');
+setTimeout(maybeShowBackupReminder, 800);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

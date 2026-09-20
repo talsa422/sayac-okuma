@@ -98,12 +98,21 @@
   <section id="view-settings" class="view" hidden>
     <div class="form-row">
       <button id="btnBackup" class="btn-secondary">Tüm Verileri Yedekle (JSON indir)</button>
+      <p class="hint" id="lastBackupInfo"></p>
     </div>
     <div class="form-row">
       <button id="btnRestore" class="btn-secondary">Yedekten Geri Yükle</button>
       <input id="restoreFileInput" type="file" accept="application/json" hidden>
     </div>
     <hr>
+    <div class="form-row">
+      <label>Son Silinen Daireler</label>
+      <div id="trashList"></div>
+    </div>
+    <hr>
+    <div class="form-row" id="wipeRestoreRow" hidden>
+      <button id="btnRestoreWipe" class="btn-secondary">Silinen Tüm Verileri Geri Getir</button>
+    </div>
     <div class="form-row">
       <button id="btnWipe" class="btn-danger">Tüm Verileri Sil</button>
     </div>
