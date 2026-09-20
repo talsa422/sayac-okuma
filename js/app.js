@@ -253,6 +253,13 @@ document.getElementById('buildingSwitcher').addEventListener('change', e => {
   switchBuilding(e.target.value);
 });
 
+document.getElementById('buildingNote').addEventListener('change', e => {
+  const b = getBuilding(currentBuildingId);
+  if (!b) return;
+  b.note = e.target.value.trim();
+  saveDB();
+});
+
 document.getElementById('buildingSearch').addEventListener('input', e => {
   renderBuildingList(e.target.value);
 });
@@ -260,7 +267,7 @@ document.getElementById('buildingSearch').addEventListener('input', e => {
 document.getElementById('btnAddBuilding').addEventListener('click', () => {
   const name = prompt('Yeni bina adı:');
   if (!name || !name.trim()) return;
-  const b = { id: uid(), name: name.trim(), apartments: [] };
+  const b = { id: uid(), name: name.trim(), apartments: [], note: '' };
   db.buildings.push(b);
   saveDB();
   renderBuildingList();
@@ -276,6 +283,7 @@ function renderApartmentList() {
   const { total, done } = buildingProgress(b);
   document.getElementById('buildingProgress').textContent =
     total === 0 ? 'Bu binada daire tanımlı değil.' : `${done} / ${total} okundu`;
+  document.getElementById('buildingNote').value = b.note || '';
 
   const ul = document.getElementById('apartmentList');
   ul.innerHTML = '';

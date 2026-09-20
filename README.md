@@ -30,6 +30,8 @@ kullanılabilir. Tüm veriler yalnızca kullandığınız cihazda saklanır.
   desteğine bağlı olduğu için şu an yalnızca Android/Chrome'da çalışıyor;
   iPhone'da Safari bu özelliği desteklemediğinden düğme görünmez, ama
   iOS'un kendi klavyesindeki mikrofon tuşuyla zaten dikte yapabilirsiniz.
+- **Bina notu**: Bina ekranında, daire listesinin üstünde kalıcı bir not
+  alanı vardır (ör. "Kapıcı: Ahmet Bey", "Şaft anahtarı yönetimde").
 - **Binalar arası hızlı geçiş**: Bina ekranının üstündeki **Bina değiştir**
   açılır listesinden, ana ekrana dönmeden doğrudan başka bir binaya
   geçebilirsiniz.
@@ -137,7 +139,6 @@ kapatıp yeniden açmanız yeterli (arka planda otomatik güncellenir).
 - QR/barkod ile daire eşleştirme (sayaçta barkod varsa, doğru daireyi
   otomatik bulur).
 - Fotoğraf kanıtı (itiraz durumunda gösterilebilecek sayaç fotoğrafı).
-- Bina bazında kalıcı not (ör. "kapıcı bilgisi", "şaft anahtarı yönetimde").
 - Birden fazla cihaz arasında senkronizasyon (basit bir bulut deposu ile) —
   bu, en büyük mimari değişiklik olur, ayrıca planlanmalı.
 - İstatistik özeti ve bina etiketleme (ör. "bu ay bitti", "sorunlu").

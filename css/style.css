@@ -120,6 +120,9 @@ select{
 .building-row .chev{color:var(--text-dim);font-size:1.4rem;}
 
 .building-toolbar{margin-bottom:12px;}
+.note-row{margin-bottom:10px;}
+.note-row input{font-size:0.9rem;font-style:italic;color:var(--text-dim);}
+.note-row input:focus{font-style:normal;color:var(--text);}
 .switcher-row{margin-bottom:10px;}
 .switcher-row label{display:block;font-size:0.8rem;color:var(--text-dim);margin-bottom:4px;}
 .switcher-row select{width:100%;font-weight:600;}
