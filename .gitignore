@@ -1,0 +1,6 @@
+# Android APK/AAB derleme çıktıları ve imzalama anahtarı - bunlar GitHub Release'e
+# ayrı olarak yükleniyor, kaynak koduyla birlikte depoya (özellikle bu depo HERKESE
+# AÇIK olduğu için) commit edilmemeli.
+android-app/
+*.keystore
+*.jks
