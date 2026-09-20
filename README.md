@@ -64,20 +64,35 @@ npx serve .
 
 Sonra tarayıcıda `http://localhost:8000` adresini açın.
 
-### Telefona kurma (önerilen yöntem)
+### Telefona kurma
 
-Telefondan da erişebilmek için uygulamayı ücretsiz bir statik barındırma
-servisine (ör. GitHub Pages, Netlify, Vercel) yüklemeniz en pratik yol —
-böylece hem siz hem gerekirse yanınızdaki biri aynı adresten erişebilir.
-İsterseniz bunu birlikte ayarlayabiliriz.
+Uygulama yayında, telefonda şu adresten açılabilir:
 
-Barındırma adresi elinize geçtikten sonra telefonda:
+**https://talsa422.github.io/sayac-okuma/**
 
-1. Chrome (Android) veya Safari (iPhone) ile adresi açın.
+1. Bu adresi Chrome (Android) veya Safari (iPhone) ile açın.
 2. Chrome'da sağ üst **⋮ menü → Ana ekrana ekle**; Safari'de **Paylaş →
    Ana Ekrana Ekle**.
-3. Artık uygulama ikonu ana ekranınızda, normal bir uygulama gibi açılır ve
-   internetsiz de çalışır.
+3. Artık uygulama ikonu ana ekranınızda, normal bir uygulama gibi açılır,
+   tam ekran çalışır ve internetsiz de kullanılabilir.
+
+Kod `github.com/talsa422/sayac-okuma` adresinde herkese açık (public) bir
+depoda tutuluyor; bu sadece uygulamanın kaynak kodu, hiçbir bina/daire/okuma
+verisi değil. Verileriniz her zaman yalnızca kendi telefonunuzda saklanır,
+hiçbir sunucuya gönderilmez.
+
+### Uygulamayı güncellemek
+
+İleride kod üzerinde değişiklik yaparsak, güncellemeyi yayına almak için:
+
+```powershell
+git add -A
+git commit -m "güncelleme açıklaması"
+git push
+```
+
+Birkaç dakika içinde aynı adres güncel sürümü gösterir; telefonda uygulamayı
+kapatıp yeniden açmanız yeterli (arka planda otomatik güncellenir).
 
 ## Kullanım akışı
 
