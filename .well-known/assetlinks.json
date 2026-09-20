@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "io.github.talsa422.sayacokuma",
+    "sha256_cert_fingerprints": ["65:90:E3:C8:C9:5B:18:6E:69:36:E6:BD:9A:16:A6:1C:C2:C2:F7:93:EF:69:30:EA:9F:D0:A4:1A:AD:BD:BA:B8"]
+  }
+}]
